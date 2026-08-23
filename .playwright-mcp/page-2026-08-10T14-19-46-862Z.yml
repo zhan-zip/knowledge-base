@@ -1,0 +1,15 @@
+- generic [active] [ref=f1e1]:
+  - generic [ref=f1e2]: 正在加载 3D 图谱引擎…
+  - banner [ref=f1e4]:
+    - heading "◆ 知识图谱原型 Knowledge Graph · 示例数据" [level=1] [ref=f1e5]
+    - textbox "🔍 搜索节点…" [ref=f1e7]
+    - generic [ref=f1e8]:
+      - button "🌐 3D 球状图" [ref=f1e9] [cursor=pointer]
+      - button "🕸 2D 力导向" [ref=f1e10] [cursor=pointer]
+      - button "☰ 列表" [ref=f1e11] [cursor=pointer]
+  - generic [ref=f1e12]: 拖拽旋转 · 滚轮缩放 · 点击节点看详情
+  - generic:
+    - text: agent
+    - heading "节点" [level=3]
+    - paragraph: 描述
+    - generic: 连接 0 个节点

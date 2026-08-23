@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>知识图谱原型 · Knowledge Graph Prototype</title>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --panel: rgba(16, 22, 38, 0.85);
+    --border: rgba(120, 140, 190, 0.25);
+    --text: #dce4f5;
+    --muted: #8b96b5;
+    --accent: #6c8cff;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    font-family: system-ui, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: radial-gradient(1200px 800px at 30% 20%, #101a33 0%, var(--bg) 60%);
+    color: var(--text);
+    overflow: hidden;
+  }
+
+  /* 顶部栏 */
+  header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 20;
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 22px;
+    background: linear-gradient(180deg, rgba(10,14,26,0.95), rgba(10,14,26,0.7));
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 { font-size: 17px; font-weight: 600; letter-spacing: 0.3px; white-space: nowrap; }
+  header h1 .dot { color: var(--accent); }
+  .spacer { flex: 1; }
+  .seg { display: flex; gap: 6px; background: rgba(255,255,255,0.04); padding: 4px; border-radius: 10px; }
+  .seg button {
+    border: none; background: transparent; color: var(--muted);
+    padding: 7px 16px; border-radius: 7px; cursor: pointer; font-size: 13px;
+    transition: all .18s;
+  }
+  .seg button.active { background: var(--accent); color: #fff; }
+  .seg button:not(.active):hover { color: var(--text); background: rgba(255,255,255,0.06); }
+  .search input {
+    background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+    color: var(--text); padding: 8px 14px; border-radius: 10px; width: 200px;
+    font-size: 13px; outline: none; transition: all .2s;
+  }
+  .search input:focus { border-color: var(--accent); width: 240px; }
+
+  /* 画布容器 */
+  .canvas { position: absolute; inset: 0; top: 61px; }
+  .canvas > div { position: absolute; inset: 0; }
+  .hidden { display: none !important; }
+
+  /* 详情面板 */
+  #detail {
+    position: fixed; right: 22px; top: 88px; z-index: 15;
+    width: 290px; background: var(--panel); border: 1px solid var(--border);
+    border-radius: 14px; padding: 18px; backdrop-filter: blur(10px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    transition: opacity .25s, transform .25s;
+  }
+  #detail.closed { opacity: 0; transform: translateY(6px); pointer-events: none; }
+  #detail .g-tag { font-size: 11px; padding: 2px 8px; border-radius: 20px; letter-spacing: .5px; }
+  #detail h3 { margin: 10px 0 6px; font-size: 17px; }
+  #detail p { font-size: 13px; color: var(--muted); line-height: 1.7; }
+  #detail .conn { margin-top: 12px; font-size: 12px; color: var(--muted); }
+  #detail .conn span { color: var(--text); }
+
+  /* 图例 */
+  #legend {
+    position: fixed; left: 22px; bottom: 20px; z-index: 15;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 16px; backdrop-filter: blur(8px);
+    display: flex; gap: 14px; font-size: 12px; color: var(--muted);
+    flex-wrap: wrap;
+  }
+  #legend .item { display: flex; align-items: center; gap: 6px; }
+  #legend .swatch { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* 列表视图 */
+  #listView { overflow-y: auto; padding: 22px; }
+  #listView .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px; cursor: pointer; transition: all .18s;
+  }
+  .card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .card .row { display: flex; align-items: center; gap: 8px; }
+  .card h4 { font-size: 14px; }
+  .card p { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.6; }
+  .card .cnt { font-size: 11px; color: var(--accent); margin-left: auto; }
+
+  .hint { position: fixed; left: 22px; top: 76px; z-index: 14; font-size: 12px; color: var(--muted); opacity: .75; }
+  #loading {
+    position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center;
+    background: var(--bg); flex-direction: column; gap: 14px; font-size: 14px; color: var(--muted);
+  }
+  .spin { width: 30px; height: 30px; border: 3px solid rgba(108,140,255,0.2); border-top-color: var(--accent); border-radius: 50%; animation: rot 0.8s linear infinite; }
+  @keyframes rot { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div id="loading"><div class="spin"></div>正在加载 3D 图谱引擎…</div>
+
+<header>
+  <h1><span class="dot">◆</span> 知识图谱原型 <span style="font-weight:400;font-size:12px;color:var(--muted)">Knowledge Graph · 示例数据</span></h1>
+  <div class="spacer"></div>
+  <div class="search"><input id="search" type="text" placeholder="🔍 搜索节点…" /></div>
+  <div class="seg" id="viewSeg">
+    <button data-view="3d" class="active">🌐 3D 球状图</button>
+    <button data-view="2d">🕸 2D 力导向</button>
+    <button data-view="list">☰ 列表</button>
+  </div>
+</header>
+
+<div class="hint">拖拽旋转 · 滚轮缩放 · 点击节点看详情</div>
+
+<div id="graph3d" class="canvas"></div>
+<div id="graph2d" class="canvas hidden"></div>
+<div id="listView" class="canvas hidden"><div class="grid" id="listGrid"></div></div>
+
+<div id="detail" class="closed">
+  <span class="g-tag" id="dTag">agent</span>
+  <h3 id="dName">节点</h3>
+  <p id="dDesc">描述</p>
+  <div class="conn">连接 <span id="dConn">0</span> 个节点</div>
+</div>
+
+<div id="legend"></div>
+
+<script src="lib/three.min.js"></script>
+<script src="lib/3d-force-graph.umd.js"></script>
+<script src="lib/echarts.min.js"></script>
+
+<script>
+/* ---------- 分组配色 ---------- */
+const GROUPS = {
+  agent:  { label: 'Agent 框架', color: '#ff6b6b' },
+  comm:   { label: '协议通信',   color: '#4da3ff' },
+  llm:    { label: 'LLM / API',  color: '#b07cff' },
+  kb:     { label: '知识库',     color: '#37d67a' },
+  back:   { label: '后端基础',   color: '#ffb84d' },
+};
+
+/* ---------- 示例数据：agent 开发相关知识点 ---------- */
+const nodes = [
+  { id: 'tool-calling',   group: 'agent', val: 6, desc: '让模型按 schema 调用工具的核心机制，agent 的骨架' },
+  { id: 'function-calling', group: 'agent', val: 4, desc: 'OpenAI 风格的 function calling 格式，DeepSeek 兼容' },
+  { id: 'two-stage-loop', group: 'agent', val: 4, desc: '先非流式拿 tool_calls，执行后二次流式输出的双阶段循环' },
+  { id: 'hallucination', group: 'agent', val: 5, desc: 'LLM 幻觉：编造执行结果、谎称已发送。靠白名单+过滤+降 temperature 治' },
+  { id: 'sys-prompt',     group: 'agent', val: 3, desc: 'system prompt 硬规则 + 关键词强制调工具，防幻觉的最后一道闸' },
+  { id: 'sse-stream',     group: 'agent', val: 4, desc: 'SSE 流式输出，把 token 一段段推给前端，聊天体验的关键' },
+  { id: 'napcat',         group: 'comm',  val: 5, desc: 'QQ 协议桥接器，OneBot v11 实现，你之前的 QQ agent 在用' },
+  { id: 'onebot',         group: 'comm',  val: 4, desc: '统一机器人消息协议 v11，WebSocket 连接' },
+  { id: 'websocket',      group: 'comm',  val: 5, desc: '长连接通信，NapCat 默认走 WS 3001 端口' },
+  { id: 'reconnect-backoff', group: 'comm', val: 4, desc: 'WS 断线重连的指数退避策略，防风暴' },
+  { id: 'playwright',     group: 'comm',  val: 3, desc: '浏览器自动化，抓网页/填表/截图，也用于测试界面' },
+  { id: 'deepseek',       group: 'llm',   val: 6, desc: '主用大模型，deepseek-chat，openai SDK 直连' },
+  { id: 'openai-sdk',     group: 'llm',   val: 4, desc: 'openai 官方 SDK，base_url 指向 deepseek 端点' },
+  { id: 'qwen-vl',        group: 'llm',   val: 3, desc: '通义千问识图模型，处理图片类输入' },
+  { id: 'compiled-wiki',  group: 'kb',    val: 6, desc: 'Karpathy LLM Wiki 模式：LLM 把资料编译成互链 Markdown，知识累积' },
+  { id: 'rag',            group: 'kb',    val: 6, desc: '检索增强：切块→向量化→捞碎片→拼答案，wiki 的兜底' },
+  { id: 'chromadb',       group: 'kb',    val: 4, desc: '本地向量数据库，存 chunk 的 embedding' },
+  { id: 'bge-embedding',  group: 'kb',    val: 4, desc: 'bge-small-zh 本地向量化，中文效果好、离线免费' },
+  { id: 'markdown',       group: 'kb',    val: 5, desc: '一切知识的载体：wiki、卡片、笔记全是 Markdown' },
+  { id: 'obsidian',       group: 'kb',    val: 3, desc: '本地 Markdown 知识库工具，双链+图谱的标杆' },
+  { id: 'backlink',       group: 'kb',    val: 3, desc: '双向链接：概念互相关联，图谱的数据来源' },
+  { id: 'bm25',           group: 'kb',    val: 3, desc: '关键词检索引擎，wiki 层快速搜索' },
+  { id: 'fsrs',           group: 'kb',    val: 5, desc: '间隔重复算法（Anki 在用），按遗忘曲线排复习时间' },
+  { id: 'review-queue',   group: 'kb',    val: 4, desc: '复习队列：到期卡片按 FSRS 排期，每天翻卡打分' },
+  { id: 'fastapi',        group: 'back',  val: 5, desc: '后端框架，异步，自带 SSE/WebSocket 支持' },
+  { id: 'asyncio',        group: 'back',  val: 4, desc: 'Python 异步运行时，整个后端的地基' },
+  { id: 'sqlite',         group: 'back',  val: 3, desc: '轻量数据库，存复习状态/对话历史/元数据' },
+];
+
+const links = [
+  ['tool-calling','function-calling','格式'], ['tool-calling','two-stage-loop','属于'],
+  ['tool-calling','hallucination','产生'], ['tool-calling','sse-stream','输出'],
+  ['hallucination','sys-prompt','对策'], ['hallucination','deepseek','源于'],
+  ['napcat','onebot','实现'], ['napcat','websocket','连接'],
+  ['websocket','reconnect-backoff','故障处理'], ['playwright','napcat','辅助'],
+  ['deepseek','openai-sdk','调用'], ['deepseek','qwen-vl','补充'],
+  ['compiled-wiki','markdown','存储'], ['compiled-wiki','obsidian','浏览'],
+  ['compiled-wiki','backlink','依据'], ['compiled-wiki','bm25','检索'],
+  ['compiled-wiki','rag','互补'], ['rag','chromadb','向量库'],
+  ['rag','bge-embedding','向量化'], ['compiled-wiki','fsrs','喂养'],
+  ['fsrs','review-queue','驱动'], ['review-queue','sqlite','存储'],
+  ['review-queue','markdown','卡片'], ['sse-stream','fastapi','实现'],
+  ['fastapi','asyncio','运行'], ['backlink','obsidian','可视化'],
+  ['two-stage-loop','asyncio','并发'],
+];
+
+nodes.forEach(n => { if (!n.name) n.name = n.id; });   // 显示名缺省用 id
+const byId = Object.fromEntries(nodes.map(n => [n.id, n]));
+
+/* ---------- DOM 工具 ---------- */
+const $ = sel => document.querySelector(sel);
+const views = { '3d': $('#graph3d'), '2d': $('#graph2d'), list: $('#listView') };
+
+/* ---------- 详情面板 ---------- */
+const detail = $('#detail');
+function openDetail(node) {
+  $('#dTag').textContent = GROUPS[node.group].label;
+  $('#dTag').style.background = GROUPS[node.group].color + '33';
+  $('#dTag').style.color = GROUPS[node.group].color;
+  $('#dName').textContent = node.name;
+  $('#dDesc').textContent = node.desc || '（暂无描述）';
+  const conns = links.filter(l => l[0] === node.id || l[1] === node.id);
+  $('#dConn').textContent = conns.length;
+  detail.classList.remove('closed');
+}
+
+/* ---------- 搜索过滤 ---------- */
+let query = '';
+function matches(n) { return !query || n.name.toLowerCase().includes(query); }
+
+/* ---------- 3D 视图（3d-force-graph） ---------- */
+const _fg = window.ForceGraph3D;
+const F3 = (_fg && typeof _fg === 'object' && _fg.ForceGraph3D) ? _fg.ForceGraph3D : _fg;
+console.log('[proto] ForceGraph3D global:', typeof _fg, _fg && Object.keys(_fg));
+
+const nodeById = Object.fromEntries(nodes.map(n => [n.id, n]));
+const graph3d = F3()(views['3d'])
+  .graphData({ nodes, links: links.map(([s, t, label]) => ({ source: nodeById[s], target: nodeById[t], label })) })
+  .nodeId(d => d.id)
+  .nodeLabel(d => d.name)
+  .nodeVal(d => d.val)
+  .nodeColor(d => GROUPS[d.group].color)
+  .nodeResolution(14)
+  .linkLabel(d => d.label || '')
+  .linkWidth(() => 2.5)
+  .linkColor(() => 'rgba(160,180,220,0.9)')
+  .onNodeClick(d => openDetail(d))
+  .onNodeHover(d => (document.body.style.cursor = d ? 'pointer' : 'default'))
+  .cooldownTicks(120)
+  .warmupTicks(30);
+
+try {
+  const c = graph3d.controls();
+  c.autoRotate = true;
+  c.autoRotateSpeed = 0.6;
+} catch (e) { console.log('controls:', e.message); }
+
+/* ---------- 2D 视图（ECharts graph） ---------- */
+const chart2d = echarts.init(views['2d']);
+function render2d() {
+  chart2d.setOption({
+    backgroundColor: 'transparent',
+    tooltip: { textStyle: { color: '#fff', fontSize: 12 } },
+    series: [{
+      type: 'graph',
+      layout: 'force',
+      roam: true,
+      draggable: true,
+      force: { repulsion: 320, edgeLength: 90, gravity: 0.08 },
+      categories: Object.entries(GROUPS).map(([k, v]) => ({ name: v.label })),
+      data: nodes.map(n => ({
+        id: n.id, name: n.name, value: n.val, category: n.group,
+        symbolSize: n.val * 7,
+        itemStyle: { color: GROUPS[n.group].color, opacity: matches(n) ? 1 : 0.12 },
+        label: { show: matches(n), color: '#dce4f5', fontSize: 11 },
+      })),
+      links: links.map(([s, t, label]) => ({ source: s, target: t })),
+      label: { show: true, position: 'right' },
+      lineStyle: { color: 'rgba(140,160,200,0.4)', width: 1, curveness: 0.08 },
+      emphasis: { focus: 'adjacency', lineStyle: { width: 2, color: '#6c8cff' } },
+    }],
+  });
+  chart2d.on('click', p => {
+    if (p.dataType === 'node') openDetail(byId[p.data.id]);
+  });
+}
+render2d();
+
+/* ---------- 列表视图 ---------- */
+function renderList() {
+  const items = nodes.filter(matches).map(n => {
+    const conns = links.filter(l => l[0] === n.id || l[1] === n.id).length;
+    const c = GROUPS[n.group];
+    return `<div class="card" data-id="${n.id}">
+      <div class="row">
+        <span class="swatch" style="width:10px;height:10px;border-radius:50%;background:${c.color}"></span>
+        <h4>${n.name}</h4>
+        <span class="cnt">${conns} 连</span>
+      </div>
+      <p>${n.desc || ''}</p>
+    </div>`;
+  }).join('');
+  $('#listGrid').innerHTML = items || '<p style="color:var(--muted);padding:20px">没有匹配节点</p>';
+}
+renderList();
+$('#listGrid').addEventListener('click', e => {
+  const card = e.target.closest('.card');
+  if (card) openDetail(byId[card.dataset.id]);
+});
+
+/* ---------- 搜索联动 ---------- */
+$('#search').addEventListener('input', e => {
+  query = e.target.value.trim().toLowerCase();
+  const col = n => (matches(n) ? GROUPS[n.group].color : 'rgba(150,160,190,0.06)');
+  graph3d.nodeColor(col).nodeVal(n => (query ? (matches(n) ? 8 : 0.5) : n.val));
+  render2d();
+  renderList();
+});
+
+/* ---------- 视图切换 ---------- */
+function showView(name) {
+  for (const [k, el] of Object.entries(views)) el.classList.toggle('hidden', k !== name);
+  document.querySelectorAll('#viewSeg button').forEach(b => b.classList.toggle('active', b.dataset.view === name));
+  if (name === '3d') graph3d.width(window.innerWidth).height(window.innerHeight - 61);
+  if (name === '2d') { chart2d.resize(); }
+}
+document.querySelectorAll('#viewSeg button').forEach(b => {
+  b.onclick = () => showView(b.dataset.view);
+});
+
+/* ---------- 图例 ---------- */
+$('#legend').innerHTML = Object.entries(GROUPS)
+  .map(([k, v]) => `<div class="item"><span class="swatch" style="background:${v.color}"></span>${v.label}</div>`)
+  .join('');
+
+/* ---------- 自适应 ---------- */
+window.addEventListener('resize', () => {
+  graph3d.width(window.innerWidth).height(window.innerHeight - 61);
+  chart2d.resize();
+});
+
+/* ---------- 初始 ---------- */
+showView('3d');
+$('#loading').style.display = 'none';
+</script>
+</body>
+</html>

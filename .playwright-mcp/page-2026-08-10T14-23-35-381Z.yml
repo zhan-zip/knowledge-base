@@ -1,0 +1,156 @@
+- generic [ref=f4e1]:
+  - banner [ref=f4e2]:
+    - heading "◆ 知识图谱原型 Knowledge Graph · 示例数据" [level=1] [ref=f4e3]
+    - textbox "🔍 搜索节点…" [ref=f4e5]
+    - generic [ref=f4e6]:
+      - button "🌐 3D 球状图" [ref=f4e7] [cursor=pointer]
+      - button "🕸 2D 力导向" [ref=f4e8] [cursor=pointer]
+      - button "☰ 列表" [active] [ref=f4e9] [cursor=pointer]
+  - generic [ref=f4e10]: 拖拽旋转 · 滚轮缩放 · 点击节点看详情
+  - generic [ref=f4e28]:
+    - generic [ref=f4e29] [cursor=pointer]:
+      - generic [ref=f4e30]:
+        - heading "tool-calling" [level=4] [ref=f4e32]
+        - generic [ref=f4e33]: 4 连
+      - paragraph [ref=f4e34]: 让模型按 schema 调用工具的核心机制，agent 的骨架
+    - generic [ref=f4e35] [cursor=pointer]:
+      - generic [ref=f4e36]:
+        - heading "function-calling" [level=4] [ref=f4e38]
+        - generic [ref=f4e39]: 1 连
+      - paragraph [ref=f4e40]: OpenAI 风格的 function calling 格式，DeepSeek 兼容
+    - generic [ref=f4e41] [cursor=pointer]:
+      - generic [ref=f4e42]:
+        - heading "two-stage-loop" [level=4] [ref=f4e44]
+        - generic [ref=f4e45]: 2 连
+      - paragraph [ref=f4e46]: 先非流式拿 tool_calls，执行后二次流式输出的双阶段循环
+    - generic [ref=f4e47] [cursor=pointer]:
+      - generic [ref=f4e48]:
+        - heading "hallucination" [level=4] [ref=f4e50]
+        - generic [ref=f4e51]: 3 连
+      - paragraph [ref=f4e52]: LLM 幻觉：编造执行结果、谎称已发送。靠白名单+过滤+降 temperature 治
+    - generic [ref=f4e53] [cursor=pointer]:
+      - generic [ref=f4e54]:
+        - heading "sys-prompt" [level=4] [ref=f4e56]
+        - generic [ref=f4e57]: 1 连
+      - paragraph [ref=f4e58]: system prompt 硬规则 + 关键词强制调工具，防幻觉的最后一道闸
+    - generic [ref=f4e59] [cursor=pointer]:
+      - generic [ref=f4e60]:
+        - heading "sse-stream" [level=4] [ref=f4e62]
+        - generic [ref=f4e63]: 2 连
+      - paragraph [ref=f4e64]: SSE 流式输出，把 token 一段段推给前端，聊天体验的关键
+    - generic [ref=f4e65] [cursor=pointer]:
+      - generic [ref=f4e66]:
+        - heading "napcat" [level=4] [ref=f4e68]
+        - generic [ref=f4e69]: 3 连
+      - paragraph [ref=f4e70]: QQ 协议桥接器，OneBot v11 实现，你之前的 QQ agent 在用
+    - generic [ref=f4e71] [cursor=pointer]:
+      - generic [ref=f4e72]:
+        - heading "onebot" [level=4] [ref=f4e74]
+        - generic [ref=f4e75]: 1 连
+      - paragraph [ref=f4e76]: 统一机器人消息协议 v11，WebSocket 连接
+    - generic [ref=f4e77] [cursor=pointer]:
+      - generic [ref=f4e78]:
+        - heading "websocket" [level=4] [ref=f4e80]
+        - generic [ref=f4e81]: 2 连
+      - paragraph [ref=f4e82]: 长连接通信，NapCat 默认走 WS 3001 端口
+    - generic [ref=f4e83] [cursor=pointer]:
+      - generic [ref=f4e84]:
+        - heading "reconnect-backoff" [level=4] [ref=f4e86]
+        - generic [ref=f4e87]: 1 连
+      - paragraph [ref=f4e88]: WS 断线重连的指数退避策略，防风暴
+    - generic [ref=f4e89] [cursor=pointer]:
+      - generic [ref=f4e90]:
+        - heading "playwright" [level=4] [ref=f4e92]
+        - generic [ref=f4e93]: 1 连
+      - paragraph [ref=f4e94]: 浏览器自动化，抓网页/填表/截图，也用于测试界面
+    - generic [ref=f4e95] [cursor=pointer]:
+      - generic [ref=f4e96]:
+        - heading "deepseek" [level=4] [ref=f4e98]
+        - generic [ref=f4e99]: 3 连
+      - paragraph [ref=f4e100]: 主用大模型，deepseek-chat，openai SDK 直连
+    - generic [ref=f4e101] [cursor=pointer]:
+      - generic [ref=f4e102]:
+        - heading "openai-sdk" [level=4] [ref=f4e104]
+        - generic [ref=f4e105]: 1 连
+      - paragraph [ref=f4e106]: openai 官方 SDK，base_url 指向 deepseek 端点
+    - generic [ref=f4e107] [cursor=pointer]:
+      - generic [ref=f4e108]:
+        - heading "qwen-vl" [level=4] [ref=f4e110]
+        - generic [ref=f4e111]: 1 连
+      - paragraph [ref=f4e112]: 通义千问识图模型，处理图片类输入
+    - generic [ref=f4e113] [cursor=pointer]:
+      - generic [ref=f4e114]:
+        - heading "compiled-wiki" [level=4] [ref=f4e116]
+        - generic [ref=f4e117]: 6 连
+      - paragraph [ref=f4e118]: Karpathy LLM Wiki 模式：LLM 把资料编译成互链 Markdown，知识累积
+    - generic [ref=f4e119] [cursor=pointer]:
+      - generic [ref=f4e120]:
+        - heading "rag" [level=4] [ref=f4e122]
+        - generic [ref=f4e123]: 3 连
+      - paragraph [ref=f4e124]: 检索增强：切块→向量化→捞碎片→拼答案，wiki 的兜底
+    - generic [ref=f4e125] [cursor=pointer]:
+      - generic [ref=f4e126]:
+        - heading "chromadb" [level=4] [ref=f4e128]
+        - generic [ref=f4e129]: 1 连
+      - paragraph [ref=f4e130]: 本地向量数据库，存 chunk 的 embedding
+    - generic [ref=f4e131] [cursor=pointer]:
+      - generic [ref=f4e132]:
+        - heading "bge-embedding" [level=4] [ref=f4e134]
+        - generic [ref=f4e135]: 1 连
+      - paragraph [ref=f4e136]: bge-small-zh 本地向量化，中文效果好、离线免费
+    - generic [ref=f4e137] [cursor=pointer]:
+      - generic [ref=f4e138]:
+        - heading "markdown" [level=4] [ref=f4e140]
+        - generic [ref=f4e141]: 2 连
+      - paragraph [ref=f4e142]: 一切知识的载体：wiki、卡片、笔记全是 Markdown
+    - generic [ref=f4e143] [cursor=pointer]:
+      - generic [ref=f4e144]:
+        - heading "obsidian" [level=4] [ref=f4e146]
+        - generic [ref=f4e147]: 2 连
+      - paragraph [ref=f4e148]: 本地 Markdown 知识库工具，双链+图谱的标杆
+    - generic [ref=f4e149] [cursor=pointer]:
+      - generic [ref=f4e150]:
+        - heading "backlink" [level=4] [ref=f4e152]
+        - generic [ref=f4e153]: 2 连
+      - paragraph [ref=f4e154]: 双向链接：概念互相关联，图谱的数据来源
+    - generic [ref=f4e155] [cursor=pointer]:
+      - generic [ref=f4e156]:
+        - heading "bm25" [level=4] [ref=f4e158]
+        - generic [ref=f4e159]: 1 连
+      - paragraph [ref=f4e160]: 关键词检索引擎，wiki 层快速搜索
+    - generic [ref=f4e161] [cursor=pointer]:
+      - generic [ref=f4e162]:
+        - heading "fsrs" [level=4] [ref=f4e164]
+        - generic [ref=f4e165]: 2 连
+      - paragraph [ref=f4e166]: 间隔重复算法（Anki 在用），按遗忘曲线排复习时间
+    - generic [ref=f4e167] [cursor=pointer]:
+      - generic [ref=f4e168]:
+        - heading "review-queue" [level=4] [ref=f4e170]
+        - generic [ref=f4e171]: 3 连
+      - paragraph [ref=f4e172]: 复习队列：到期卡片按 FSRS 排期，每天翻卡打分
+    - generic [ref=f4e173] [cursor=pointer]:
+      - generic [ref=f4e174]:
+        - heading "fastapi" [level=4] [ref=f4e176]
+        - generic [ref=f4e177]: 2 连
+      - paragraph [ref=f4e178]: 后端框架，异步，自带 SSE/WebSocket 支持
+    - generic [ref=f4e179] [cursor=pointer]:
+      - generic [ref=f4e180]:
+        - heading "asyncio" [level=4] [ref=f4e182]
+        - generic [ref=f4e183]: 2 连
+      - paragraph [ref=f4e184]: Python 异步运行时，整个后端的地基
+    - generic [ref=f4e185] [cursor=pointer]:
+      - generic [ref=f4e186]:
+        - heading "sqlite" [level=4] [ref=f4e188]
+        - generic [ref=f4e189]: 1 连
+      - paragraph [ref=f4e190]: 轻量数据库，存复习状态/对话历史/元数据
+  - generic:
+    - text: agent
+    - heading "节点" [level=3]
+    - paragraph: 描述
+    - generic: 连接 0 个节点
+  - generic [ref=f4e16]:
+    - generic [ref=f4e17]: Agent 框架
+    - generic [ref=f4e19]: 协议通信
+    - generic [ref=f4e21]: LLM / API
+    - generic [ref=f4e23]: 知识库
+    - generic [ref=f4e25]: 后端基础
