@@ -8,6 +8,9 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
+# 导入路由
+from backend.routes import services
+
 logger = logging.getLogger("main")
 
 # 创建 FastAPI 应用
@@ -45,6 +48,9 @@ async def health_check():
 async def root():
     """根路径"""
     return {"message": "Knowledge Base API", "docs": "/docs"}
+
+# ===== 注册路由 =====
+app.include_router(services.router)
 
 # ===== 静态文件托管（前端构建产物）=====
 # 注意：frontend/dist/ 目前不存在，等 M6 前端构建后生效
