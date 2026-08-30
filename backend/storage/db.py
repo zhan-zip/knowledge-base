@@ -147,6 +147,13 @@ def get_due_reviews(today: str) -> list[dict]:
         return [dict(r) for r in rows]
 
 
+def list_reviews() -> list[dict]:
+    """全量复习状态（M7 遗忘地图：图谱节点熟练度映射的数据源）"""
+    with _conn() as conn:
+        rows = conn.execute("SELECT * FROM reviews").fetchall()
+        return [dict(r) for r in rows]
+
+
 def delete_review(concept: str) -> bool:
     with _conn() as conn:
         cur = conn.execute("DELETE FROM reviews WHERE concept = ?", (concept,))
