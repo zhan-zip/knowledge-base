@@ -39,3 +39,4 @@ AGENTS.md
 *.log
 .pytest_cache/
 .vite/
+.playwright-mcp/
