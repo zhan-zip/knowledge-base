@@ -39,38 +39,40 @@ class ServicesUpdateRequest(BaseModel):
 @router.get("")
 async def get_services() -> Dict[str, Any]:
     """
-    获取所有 LLM 服务配置
-    
-    返回格式：
-    {
-        "default_service": "deepseek",
-        "compile_service": "deepseek",
-        "services": {
-            "deepseek": {
-                "enabled": true,
-                "base_url": "https://api.deepseek.com/v1",
-                "api_key": "***",  # 脱敏
-                "model": "deepseek-chat"
-            },
-            ...
-        }
-    }
+    获取所有 LLM 服务配置（读 .env 磁盘值，即"已保存"的配置）
+
+    注意：与内存中正在生效的 LLM_SERVICES 可能不同（保存后需重启后端），
+    页面展示磁盘值 + "需重启生效"提示，语义自洽；test 端点测的是内存生效配置。
     """
-    logger.info("查询服务配置")
-    
-    # 脱敏处理：API key 只显示前4位
-    services_masked = {}
-    for name, config in LLM_SERVICES.items():
-        masked_config = dict(config)
-        api_key = masked_config.get("api_key", "")
-        if api_key:
-            masked_config["api_key"] = api_key[:4] + "***" if len(api_key) > 4 else "***"
-        services_masked[name] = masked_config
-    
+    from dotenv import dotenv_values
+
+    from backend.config import PROJECT_ROOT
+
+    logger.info("查询服务配置（.env 磁盘值）")
+    env = dotenv_values(PROJECT_ROOT / ".env")
+
+    def mask(key: str | None) -> str:
+        if not key:
+            return ""
+        return key[:4] + "***" if len(key) > 4 else "***"
+
+    def build(prefix: str) -> Dict[str, Any]:
+        return {
+            "enabled": str(env.get(f"{prefix}_ENABLED", "false")).lower() == "true",
+            "base_url": env.get(f"{prefix}_BASE_URL") or "",
+            "api_key": mask(env.get(f"{prefix}_API_KEY")),
+            "model": env.get(f"{prefix}_MODEL") or "",
+        }
+
+    default_service = env.get("DEFAULT_LLM_SERVICE") or "deepseek"
     return {
-        "default_service": DEFAULT_LLM_SERVICE,
-        "compile_service": COMPILE_SERVICE,
-        "services": services_masked
+        "default_service": default_service,
+        "compile_service": env.get("COMPILE_SERVICE") or default_service,
+        "services": {
+            "deepseek": build("DEEPSEEK"),
+            "claude": build("CLAUDE"),
+            "openai": build("OPENAI"),
+        },
     }
 
 
@@ -117,7 +119,8 @@ async def update_services(request: ServicesUpdateRequest) -> Dict[str, Any]:
             if config.base_url:
                 updates[f"{prefix}_BASE_URL"] = config.base_url
             
-            if config.api_key and config.api_key != "***":  # 只更新非脱敏值
+            if config.api_key and "***" not in config.api_key:
+                # 脱敏值（sk-x*** 形式）不回写，防止覆盖真实密钥
                 updates[f"{prefix}_API_KEY"] = config.api_key
             
             if config.model:
@@ -134,24 +137,33 @@ async def update_services(request: ServicesUpdateRequest) -> Dict[str, Any]:
 @router.get("/{service}/models")
 async def get_service_models(service: str) -> Dict[str, Any]:
     """
-    获取指定服务的可用模型列表
-    
-    注意：目前返回配置的固定模型，未来可扩展为动态查询
+    获取指定服务的可用模型列表（动态调用 /v1/models）
+
+    成功：{"service", "models": [id...], "current_model", "dynamic": true}
+    失败（网络/凭据/端点不支持）：{"service", "models": [], "current_model",
+        "dynamic": false, "error": "..."} —— 前端据此降级为手动输入框
     """
+    import asyncio
+
     logger.info(f"查询服务 {service} 的模型列表")
-    
+
     config = LLM_SERVICES.get(service)
     if not config:
         raise HTTPException(status_code=404, detail=f"服务 {service} 不存在")
-    
-    model = config.get("model")
-    
-    # 返回当前配置的模型（未来可扩展为调用 API 获取模型列表）
-    return {
-        "service": service,
-        "models": [model] if model else [],
-        "current_model": model
-    }
+
+    try:
+        client = get_llm_client().get_client(service)
+        if not client:
+            raise ValueError(f"服务 {service} 未启用或配置不完整")
+        models = await asyncio.to_thread(
+            lambda: sorted(m.id for m in client.models.list()))
+        return {"service": service, "models": models,
+                "current_model": config.get("model"), "dynamic": True}
+    except Exception as e:
+        logger.warning(f"动态获取 {service} 模型列表失败: {e}")
+        return {"service": service, "models": [],
+                "current_model": config.get("model"),
+                "dynamic": False, "error": str(e)[:200]}
 
 
 @router.post("/{service}/test")
