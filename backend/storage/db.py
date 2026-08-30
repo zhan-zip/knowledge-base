@@ -87,10 +87,16 @@ def _now() -> str:
 
 @contextmanager
 def _conn():
-    """独立连接上下文：自动 commit / rollback / close"""
+    """独立连接上下文：自动建表（幂等，IF NOT EXISTS 开销微秒级）+ commit / rollback / close
+
+    每次连接都执行 _SCHEMA：服务启动、CLI、agent 工具任何路径进来都无需
+    先显式 init_db，天然规避"库文件被删后首操作报 no such table"；
+    对测试 monkeypatch DB_PATH 同样安全（新库新连接自动建表）。
+    """
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode=WAL")
+    conn.executescript(_SCHEMA)
     try:
         yield conn
         conn.commit()
@@ -102,9 +108,9 @@ def _conn():
 
 
 def init_db() -> None:
-    """幂等建表（可重复调用）"""
-    with _conn() as conn:
-        conn.executescript(_SCHEMA)
+    """显式初始化（保留 API 兼容；_conn 已自动建表，通常无需调用）"""
+    with _conn():
+        pass
     logger.info(f"SQLite 初始化完成: {DB_PATH}")
 
 

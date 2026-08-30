@@ -62,19 +62,31 @@ class SummaryOutput(BaseModel):
 
 def parse_llm_json(text: str) -> dict:
     """
-    解析 LLM 输出的 JSON（容错：剥 ```json 围栏、截取首尾大括号）。
-    解析或结构不合法时抛异常，由 compile 层组织重试。
+    解析 LLM 输出的 JSON。
+
+    顺序策略（关键：先整段解析，再剥围栏，最后截取大括号——
+    不可先非贪婪剥围栏：LLM 输出的 details 字段常含 ```python 代码块
+    字面量，会误截 JSON 内部的代码块导致"找不到 JSON 对象"）：
+    1) 整段直接 json.loads（绝大多数情况命中）
+    2) 整体外层 ```json ... ``` 围栏（锚定首尾）
+    3) 截取首个 { 到最后一个 }
     """
     text = text.strip()
-    fence = re.search(r"```(?:json)?\s*(.+?)\s*```", text, re.S)
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+    fence = re.match(r"^```(?:json)?\s*(.+?)\s*```\s*$", text, re.S)
     if fence:
-        text = fence.group(1)
-    if not text.startswith("{"):
-        start, end = text.find("{"), text.rfind("}")
-        if start == -1 or end == -1:
-            raise ValueError("输出中找不到 JSON 对象")
-        text = text[start:end + 1]
-    return json.loads(text)
+        text = fence.group(1).strip()
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            pass
+    start, end = text.find("{"), text.rfind("}")
+    if start != -1 and end > start:
+        return json.loads(text[start:end + 1])
+    raise ValueError("输出中找不到 JSON 对象")
 
 
 def validate_summary_output(text: str) -> SummaryOutput:

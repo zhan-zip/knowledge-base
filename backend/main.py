@@ -11,6 +11,7 @@ from pathlib import Path
 
 # 导入路由
 from backend.routes import services
+from backend.routes import chat
 
 logger = logging.getLogger("main")
 
@@ -63,6 +64,7 @@ async def root():
 
 # ===== 注册路由 =====
 app.include_router(services.router)
+app.include_router(chat.router)
 
 # ===== 静态文件托管（前端构建产物）=====
 # 注意：frontend/dist/ 目前不存在，等 M6 前端构建后生效
