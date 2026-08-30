@@ -7,11 +7,11 @@
 //   await streamChat({ messages, service, onEvent })
 //   onEvent(event) 收到 {type:'tool'|'delta'|'done'|'error', ...}
 
-export async function streamChat({ messages, service = null, onEvent, signal }) {
+export async function streamChat({ messages, service = null, context = null, onEvent, signal }) {
   const res = await fetch('/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messages, service }),
+    body: JSON.stringify({ messages, service, context }),
     signal,
   })
   if (!res.ok || !res.body) {

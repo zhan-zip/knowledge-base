@@ -12,6 +12,7 @@ from __future__ import annotations
 from typing import Any, Dict
 
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
 from backend.compiler import lint
 from backend.config import WIKI_DIR, logger
@@ -145,6 +146,29 @@ async def get_related(node_id: str) -> Dict[str, Any]:
     logger.info(f"related: {nid} → 出 {len(result['outgoing'])} 入 "
                 f"{len(result['incoming'])} 主题 {len(result['topics'])}")
     return result
+
+
+class AnnotationCreate(BaseModel):
+    """批注创建请求（M9 选区加备注）"""
+    offset: int
+    text: str
+    note: str
+
+
+@router.post("/node/{node_id:path}/annotations")
+async def add_annotation(node_id: str, req: AnnotationCreate) -> Dict[str, Any]:
+    """
+    新增批注。offset 语义（M2 定稿，M9 实现调整为渲染后正文纯文本偏移，
+    text 双重定位以 text 匹配为准——渲染 DOM 与 Markdown 源的字符级映射
+    成本过高，务实调整，详见实施计划 M9 完成情况）。
+    """
+    nid = node_id[:-3] if node_id.endswith(".md") else node_id
+    # 校验节点存在
+    _load_page(nid)
+    aid = db.add_annotation(file=nid, offset=req.offset, text=req.text, note=req.note)
+    logger.info(f"新增批注: {nid} offset={req.offset}")
+    return {"id": aid, "node": nid, "offset": req.offset,
+            "text": req.text, "note": req.note}
 
 
 @router.get("/node/{node_id:path}/annotations")
