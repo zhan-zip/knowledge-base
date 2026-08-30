@@ -1,0 +1,28 @@
+:root {
+  --bg: #f7f8fa;
+  --bg-header: #ffffff;
+  --bg-hover: #eef1f4;
+  --bg-card: #ffffff;
+  --border: #e3e6ea;
+  --fg: #1a1f26;
+  --fg-muted: #6b7280;
+  --accent: #2563eb;
+  --accent-soft: #e8effd;
+  --danger: #dc2626;
+  --ok: #16a34a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', 'Microsoft YaHei', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+a {
+  color: var(--accent);
+}
