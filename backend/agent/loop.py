@@ -71,14 +71,19 @@ async def _stream_second_pass(messages: list[dict],
 
 
 async def run_agent_turn(messages: list[dict],
-                         service: str | None = None) -> AsyncGenerator[dict, None]:
+                         service: str | None = None,
+                         context: str | None = None) -> AsyncGenerator[dict, None]:
     """
     一轮 agent 对话：messages 为前端传来的历史（[{role, content}]）。
-    自动注入 system prompt。产出事件流（见模块 docstring）。
+    自动注入 system prompt；context 为附加上下文（如当前查看的节点，
+    M8 详情页聊天携带），拼接到 system prompt 尾部。
+    产出事件流（见模块 docstring）。
     """
-    full = messages[0] if messages and messages[0].get("role") == "system" else None
-    convo = ([full] if full else [{"role": "system", "content": SYSTEM_PROMPT}]) + \
-        [m for m in messages if m is not full]
+    system_content = SYSTEM_PROMPT + (f"\n\n【当前上下文】{context}" if context else "")
+    if messages and messages[0].get("role") == "system":
+        convo = list(messages)  # 兼容：调用方自带 system 则原样使用
+    else:
+        convo = [{"role": "system", "content": system_content}] + list(messages)
 
     client = get_llm_client()
     try:

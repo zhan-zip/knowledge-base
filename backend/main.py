@@ -13,6 +13,7 @@ from pathlib import Path
 from backend.routes import services
 from backend.routes import chat
 from backend.routes import graph
+from backend.routes import wiki
 
 logger = logging.getLogger("main")
 
@@ -67,6 +68,7 @@ async def root():
 app.include_router(services.router)
 app.include_router(chat.router)
 app.include_router(graph.router)
+app.include_router(wiki.router)
 
 # ===== 静态文件托管（前端构建产物）=====
 # 注意：frontend/dist/ 目前不存在，等 M6 前端构建后生效

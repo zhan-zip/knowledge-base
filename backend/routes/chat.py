@@ -33,6 +33,8 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     messages: List[ChatMessage]
     service: Optional[str] = Field(None, description="指定 LLM 服务，默认跟随配置")
+    context: Optional[str] = Field(None,
+                                   description="附加上下文（如当前查看的节点），拼接到 system prompt")
 
 
 @router.post("")
@@ -44,9 +46,11 @@ async def chat(req: ChatRequest) -> StreamingResponse:
         for m in messages:
             if m["role"] == "user":
                 db.add_conversation(role="user", content=m["content"],
-                                    meta={"service": req.service} if req.service else None)
+                                    meta={"service": req.service,
+                                          "context": req.context} if (req.service or req.context) else None)
         try:
-            async for event in run_agent_turn(messages, service=req.service):
+            async for event in run_agent_turn(messages, service=req.service,
+                                              context=req.context):
                 yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
                 if event.get("type") == "done":
                     full = event.get("full", "")

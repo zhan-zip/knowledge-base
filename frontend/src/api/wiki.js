@@ -1,13 +1,19 @@
-// wiki 内容 API（M8 详情页使用，后端端点在 M8 实现）
+// wiki/节点 API（M8 端点）
 
-export async function fetchNode(id) {
-  const res = await fetch(`/api/node/${encodeURIComponent(id)}`)
-  if (!res.ok) throw new Error(`获取节点失败: ${res.status}`)
+export async function fetchWiki(id) {
+  const res = await fetch(`/api/wiki/${id}`)
+  if (!res.ok) throw new Error(`获取页面失败: ${res.status}`)
   return res.json()
 }
 
-export async function fetchWiki(path) {
-  const res = await fetch(`/api/wiki/${path}`)
-  if (!res.ok) throw new Error(`获取 wiki 内容失败: ${res.status}`)
+export async function fetchRelated(id) {
+  const res = await fetch(`/api/node/${id}/related`)
+  if (!res.ok) throw new Error(`获取相关节点失败: ${res.status}`)
+  return res.json()
+}
+
+export async function fetchAnnotations(id) {
+  const res = await fetch(`/api/node/${id}/annotations`)
+  if (!res.ok) throw new Error(`获取批注失败: ${res.status}`)
   return res.json()
 }
