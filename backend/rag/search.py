@@ -47,6 +47,8 @@ class BM25WikiIndex:
         self.docs = []
         if wiki_dir.exists():
             for f in sorted(wiki_dir.rglob("*.md")):
+                if f.name.startswith("_"):
+                    continue  # 跳过 _index/_concepts/_graph 等索引文件
                 try:
                     text = f.read_text(encoding="utf-8")
                 except UnicodeDecodeError:

@@ -68,10 +68,10 @@ def update_env_file(updates: dict):
         with open(env_path, "r", encoding="utf-8") as f:
             lines = f.readlines()
     
-    # 更新已有行，收集未匹配的 key
+    # 更新已有行，收集未匹配的 key（兼容 "KEY=value" 与 "KEY = value" 两种格式）
     remaining = set(updates.keys())
     for i, line in enumerate(lines):
-        match = re.match(r'^([A-Z_]+)=', line)
+        match = re.match(r'^([A-Z_]+)\s*=', line)
         if match and match.group(1) in updates:
             key = match.group(1)
             lines[i] = f"{key}={updates[key]}\n"
