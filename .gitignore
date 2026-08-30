@@ -9,6 +9,7 @@ data/kb.db
 data/wiki/
 data/raw/
 data/insights/
+data/learning/
 *.sqlite3
 *.db
 
