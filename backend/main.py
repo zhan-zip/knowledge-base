@@ -2,6 +2,7 @@
 FastAPI 主应用：REST API + CORS + 静态文件托管
 """
 import logging
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -13,11 +14,22 @@ from backend.routes import services
 
 logger = logging.getLogger("main")
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """启动时构建 BM25 wiki 索引（wiki 为空时为空索引，M4 编译后 rebuild）"""
+    from backend.rag.search import bm25_index
+    bm25_index.build()
+    logger.info("启动完成")
+    yield
+
+
 # 创建 FastAPI 应用
 app = FastAPI(
     title="Knowledge Base API",
     description="Personal AI Knowledge Base API",
-    version="0.1.0"
+    version="0.1.0",
+    lifespan=lifespan,
 )
 
 # 配置 CORS
