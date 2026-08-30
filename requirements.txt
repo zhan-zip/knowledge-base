@@ -1,24 +1,28 @@
+# ⚠️ 版本以实际开发环境为准（2026-08-30 固化），升级大版本前先查已知坑
+# 已知坑：chromadb 1.x 与 0.5.x API 不兼容（EmbeddingFunction 接口重写）；
+#        openai 2.x 用 chat.completions 旧接口（tools 兼容），勿用新 Responses API
+
 # Web 框架
 fastapi==0.109.0
-uvicorn[standard]==0.30.6
+uvicorn[standard]==0.52.3
 
-# LLM
-openai==1.51.0
+# LLM（多服务统一接口，DeepSeek / Claude 中转 / OpenAI 中转）
+openai==2.45.0
 
-# 向量数据库
-chromadb==0.5.5
+# 向量数据库（1.x 新版 EmbeddingFunction 接口，勿按 0.5.x 旧 API 写代码）
+chromadb==1.5.9
 
-# Embedding 模型
-sentence-transformers==3.1.1
+# Embedding 模型（本地 BAAI/bge-small-zh-v1.5）
+sentence-transformers==6.0.0
 
 # BM25 检索
 rank-bm25==0.2.2
 
 # 数据验证
-pydantic==2.9.2
+pydantic==2.13.4
 
 # 环境变量
-python-dotenv==1.0.1
+python-dotenv==1.2.3
 
-# CORS
-fastapi[all]==0.115.0
+# 测试
+pytest==9.1.1
